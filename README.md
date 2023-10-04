@@ -31,7 +31,7 @@ To use the Wallarm base Docker image for your Heroku application, follow these s
 heroku create your-app-name
 ```
 
-  Or, in an existing app run:
+  Or, in an existing Heroku app run:
 
 ```bash
 heroku stack:set container
@@ -40,16 +40,24 @@ heroku stack:set container
 2. Create a `Dockerfile` file in the root of your app directory. Install all necessary dependencies such as your app's runtime. For NodeJS, use the following example:
 
 ```dockerfile
-FROM bonakodo/wallarm-heroku:4.6
+FROM bonakodo/wallarm-heroku:4.6.14@sha256:9a2a30b9d1f013e4d3f5e2206d1545706457cd0d30b4dac4d6c46559425ddf14
 
 # Install NodeJS v20 from NodeSource
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-		&& apt-get install -y nodejs
-			&& apt-get clean
+ENV NODE_MAJOR=20
+
+RUN apt-get update \
+  && apt-get install -qqy ca-certificates curl gnupg \
+  && mkdir -p /etc/apt/keyrings \
+  && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+  && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
+  && apt-get update \
+  && apt-get install nodejs -qqy \
+  && apt-get clean
 
 ADD . /opt/webapp
 WORKDIR /opt/webapp
-# Install dependencies and build the app
+
+# Install production dependencies and build the app, if necessary
 RUN npm install --omit=dev && npm run build
 ENV npm_config_prefix /opt/webapp
 
@@ -61,6 +69,7 @@ CMD ["npm", "run", "start"]
 3. Create a [`heroku.yml`](https://devcenter.heroku.com/articles/build-docker-images-heroku-yml) configuration file as follows:
 
 ```yaml
+# heroku.yml
 build:
   docker:
     web: Dockerfile
@@ -69,19 +78,26 @@ build:
 4. Modify your app to listen on `/tmp/unix.websocket` instead of `$PORT` as `$PORT` is already occupied by nginx. For example, in an express app configure port as follows:
 
 ```javascript
+// app.js
 const app = require('express')()
-let port = process.env.PORT || 3000 # Wallarm is not configured, listen on $PORT
-if(process.env.WALLARM_API_TOKEN) port = '/tmp/nginx.socket' # Wallarm is configured
+
+let port = process.env.PORT || 3000 // Wallarm is not configured, listen on $PORT
+if(process.env.WALLARM_API_TOKEN) port = '/tmp/nginx.socket' // Wallarm is configured
+
 app.listen(port, (err) => {
 	if (err) throw err
 	console.log(`> App is listening on ${port}`)
+})
+
+app.get('/', (req, res) => {
+  res.send('This app is protected by Wallarm')
 })
 ```
 
 5. Push your app
 	
 ```bash
-git add Dockerfile heroku.yml your-app.js
+git add Dockerfile heroku.yml app.js
 git commit -m "Add Heroku docker config"
 git push heroku master
 ```
@@ -97,7 +113,7 @@ The Wallarm base Docker image can be configured using environment variables. The
 
 Set these variables using the `heroku config:set` command:
 
-```
+```bash
 heroku config:set WALLARM_API_TOKEN=your-wallarm-api-token
 heroku config:set WALLARM_LABELS=group=myfancyapp
 ```

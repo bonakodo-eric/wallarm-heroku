@@ -5,7 +5,7 @@ set -e
 if [ ! -z "$WALLARM_API_TOKEN" ]; then
 	echo "Wallarm API Token is set, starting services"
 	# Configure PORT in nginx config
-	sed -i "s/\$PORT/$PORT/g" /etc/nginx/nginx.conf
+	sed -i "s/\$PORT/$PORT/g" /etc/nginx/sites-available/default
 	# Register Wallarm node in the cloud
 	/opt/wallarm/register-node --token "$WALLARM_API_TOKEN" -H "$WALLARM_API_HOST" --labels "$WALLARM_LABELS"
 	# Read default Wallarm environment variables

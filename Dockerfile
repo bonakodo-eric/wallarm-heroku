@@ -1,4 +1,6 @@
-FROM ubuntu:22.04
+FROM ubuntu:22.04@sha256:b4b521bfcec90b11d2869e00fe1f2380c21cbfcd799ee35df8bd7ac09e6f63ea
+
+ARG VERSION="4.6.14"
 
 ENV PORT=3000
 ENV WALLARM_LABELS="group=heroku"
@@ -8,7 +10,7 @@ ENV WALLARM_API_HOST="us1.api.wallarm.com"
 RUN apt-get -y update && apt-get -y install nginx curl && apt-get clean
 
 # Download and unpack the Wallarm meganode without installing
-RUN curl -o /install.sh "https://meganode.wallarm.com/4.6/wallarm-4.6.10.x86_64-glibc.sh" \
+RUN curl -o /install.sh "https://meganode.wallarm.com/$(echo "$VERSION" | cut -d '.' -f 1-2)/wallarm-$VERSION.x86_64-glibc.sh" \
 		&& chmod +x /install.sh \
 		&& /install.sh --noexec --target /opt/wallarm \
 		&& rm -f /install.sh
@@ -18,7 +20,7 @@ RUN sed -i '/^\[program:tarantool\]$/a environment=PORT=3313' /opt/wallarm/etc/s
 # Run supervisord in background. Our foreground process is the Heroku app itself
 RUN sed -i '/nodaemon=true/d' /opt/wallarm/etc/supervisord.conf
 # Add nginx to supervisord
-RUN printf "\n\n[program:nginx]\ncommand=/usr/sbin/nginx\nautorestart=true\nstartretries=4294967295" | tee -a /opt/wallarm/etc/supervisord.conf
+RUN printf "\n\n[program:nginx]\ncommand=/usr/sbin/nginx\nautorestart=true\nstartretries=4294967295\n" | tee -a /opt/wallarm/etc/supervisord.conf
 
 # Heroku runs everything under an unprivileged user (dyno:dyno), so we need to grant it access to Wallarm folders
 # TODO consider adduser with specific UID and chown instead?
@@ -26,6 +28,7 @@ RUN find /opt/wallarm -type d -exec chmod 777 {} \;
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
+COPY default.conf /etc/nginx/sites-available/default
 # Herokuesque 403 error page
 COPY 403.html /usr/share/nginx/html/403.html
 
