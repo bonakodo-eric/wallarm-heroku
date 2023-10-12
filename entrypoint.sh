@@ -10,6 +10,8 @@ if [ ! -z "$WALLARM_API_TOKEN" ]; then
 	/opt/wallarm/register-node --token "$WALLARM_API_TOKEN" -H "$WALLARM_API_HOST" --labels "$WALLARM_LABELS"
 	# Read default Wallarm environment variables
 	export $(sed -e 's/=\(.*\)/="\1"/g' /opt/wallarm/env.list | grep -v "#" | xargs)
+	# Export $PORT as $NGINX_PORT (required for the `export-metrics` script)
+	export NGINX_PORT="$PORT"
 	# Read user-set Wallarm variables
 	[ -s /etc/wallarm-override/env.list ] && export $(sed -e 's/=\(.*\)/="\1"/g' /etc/wallarm-override/env.list | grep -v "#" | xargs)
 	# Launch all Wallarm services and nginx under supervisord in the background
