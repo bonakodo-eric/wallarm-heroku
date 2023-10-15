@@ -4,7 +4,7 @@ set -e
 
 if [ ! -z "$WALLARM_API_TOKEN" ]; then
 	echo "WALLARM_API_TOKEN is set, checking configuration"
-	if [[ $DYNO == web* ]]; then
+	if [[ $DYNO == web.* ]]; then
 		echo "Heroku dyno type [$DYNO] is 'web', running Wallarm configuration scripts"
 		# Configure PORT in nginx config
 		sed -i "s/\$PORT/$PORT/g" /etc/nginx/sites-available/default
