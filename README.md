@@ -31,13 +31,13 @@ To use the Wallarm base Docker image for your Heroku application, follow these s
 heroku create your-app-name
 ```
 
-  Or, in an existing Heroku app run:
+2. Set [container](https://devcenter.heroku.com/categories/deploying-with-docker) stack:
 
 ```bash
 heroku stack:set container
 ```
 
-2. Create a `Dockerfile` file in the root of your app directory. Install all necessary dependencies such as your app's runtime. For NodeJS, use the following example:
+3. Create a `Dockerfile` file in the root of your app directory. Install all necessary dependencies such as your app's runtime. For NodeJS, use the following example:
 
 ```dockerfile
 FROM bonakodo/wallarm-heroku:4.6.14@sha256:a62b28127096b05d8750d41c7edcf1d823a7ed625925a1cfdd382ac98c910258
@@ -66,7 +66,7 @@ ENV npm_config_prefix /opt/webapp
 CMD ["npm", "run", "start"]
 ```
 
-3. Create a [`heroku.yml`](https://devcenter.heroku.com/articles/build-docker-images-heroku-yml) configuration file as follows:
+4. Create a [`heroku.yml`](https://devcenter.heroku.com/articles/build-docker-images-heroku-yml) configuration file as follows:
 
 ```yaml
 # heroku.yml
@@ -75,7 +75,7 @@ build:
     web: Dockerfile
 ```
 
-4. Modify your app to listen on `/tmp/unix.websocket` instead of `$PORT` as `$PORT` is already occupied by nginx. For example, in an express app configure port as follows:
+5. Modify your app to listen on `/tmp/unix.websocket` instead of `$PORT` as `$PORT` is already occupied by nginx. For example, in an express app configure port as follows:
 
 ```javascript
 // app.js
@@ -94,10 +94,10 @@ app.get('/', (req, res) => {
 })
 ```
 
-5. Push your app
+6. Push your app
 	
 ```bash
-git add Dockerfile heroku.yml app.js
+git add Dockerfile heroku.yml app.js package.json
 git commit -m "Add Heroku docker config"
 git push heroku master
 ```

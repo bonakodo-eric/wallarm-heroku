@@ -1,16 +1,17 @@
-FROM ubuntu:22.04@sha256:b4b521bfcec90b11d2869e00fe1f2380c21cbfcd799ee35df8bd7ac09e6f63ea
+FROM ubuntu:22.04@sha256:bbf3d1baa208b7649d1d0264ef7d522e1dc0deeeaaf6085bf8e4618867f03494
 
-ARG VERSION="4.6.14"
+ARG VERSION="4.8.4"
 
 ENV PORT=3000
 ENV WALLARM_LABELS="group=heroku"
 ENV WALLARM_API_TOKEN=
 ENV WALLARM_API_HOST="us1.api.wallarm.com"
+ENV SLAB_ALLOC_ARENA=0.5
 
 RUN apt-get -y update && apt-get -y install nginx curl && apt-get clean
 
 # Download and unpack the Wallarm meganode without installing
-RUN curl -o /install.sh "https://meganode.wallarm.com/$(echo "$VERSION" | cut -d '.' -f 1-2)/wallarm-$VERSION.x86_64-glibc.sh" \
+RUN curl -fsSL -o /install.sh "https://meganode.wallarm.com/$(echo "$VERSION" | cut -d '.' -f 1-2)/wallarm-$VERSION.x86_64-glibc.sh" \
 		&& chmod +x /install.sh \
 		&& /install.sh --noexec --target /opt/wallarm \
 		&& rm -f /install.sh
