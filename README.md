@@ -40,7 +40,7 @@ heroku stack:set container
 3. Create a `Dockerfile` file in the root of your app directory. Install all necessary dependencies such as your app's runtime. For NodeJS, use the following example:
 
 ```dockerfile
-FROM bonakodo/wallarm-heroku:4.6.14@sha256:a62b28127096b05d8750d41c7edcf1d823a7ed625925a1cfdd382ac98c910258
+FROM bonakodo/wallarm-heroku:4.8.4@sha256:ec4d8c94de76a385bc7eab01b43290da8a377a40985f889b776bf83199cff45e
 
 # Install NodeJS v20 from NodeSource
 ENV NODE_MAJOR=20
